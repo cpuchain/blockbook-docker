@@ -39,7 +39,7 @@ services:
 
   blockbook_testnet4:
     container_name: blockbook_testnet4
-    image: cpuchain/blockbook-docker:latest
+    image: ghcr.io/cpuchain/blockbook-docker:latest
     restart: always
     stop_grace_period: 30m
     networks:
