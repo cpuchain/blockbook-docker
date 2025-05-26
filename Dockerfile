@@ -61,6 +61,7 @@ RUN git init && \
 
 # Update Go Deps
 RUN go get -u -v github.com/linxGnu/grocksdb@latest && \
+  go get -u -v github.com/pebbe/zmq4@v1.2.11 && \
   go mod tidy
 
 # Build Blockbook
