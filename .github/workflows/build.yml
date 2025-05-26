@@ -277,6 +277,8 @@ jobs:
           context: .                     # Specify the build context (current directory with the Dockerfile)
           push: true                     # Push to container registry
           tags: ${{ env.TAG }} # Image and tag
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
 
       # Step 4: Build and Push Docker Image
       - name: Build and Push Docker Image (CPUchain)
@@ -286,6 +288,8 @@ jobs:
           file: cpuchain.Dockerfile
           push: true                     # Push to container registry
           tags: ${{ env.CPU_TAG }} # Image and tag
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
 
   upload:
     needs:
