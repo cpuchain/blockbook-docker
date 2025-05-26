@@ -120,6 +120,7 @@ jobs:
         run: |
           cd /build/blockbook
           go get -u -v github.com/linxGnu/grocksdb@latest
+          go get -u -v github.com/pebbe/zmq4@v1.2.11
           go mod tidy
 
       # Step 9: Build Blockbook
@@ -198,8 +199,8 @@ jobs:
       - name: Update grocksdb / zmq4 to Latest Tagged Release
         run: |
           cd blockbook
-          go get -u github.com/linxGnu/grocksdb@latest
-          go get -u github.com/pebbe/zmq4@v1.2.11
+          go get -u -v github.com/linxGnu/grocksdb@latest
+          go get -u -v github.com/pebbe/zmq4@v1.2.11
           go mod tidy # Clean up the go.mod file after updating dependencies
 
       # Step 7: Build Blockbook executable using MinGW and vcpkg dependencies
@@ -256,10 +257,17 @@ jobs:
       - name: Determine Docker Image Tag
         id: tags
         run: |
+          IMAGE=ghcr.io/${{ github.repository }}
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+            TAG="${IMAGE}:${{ github.ref_name }},${IMAGE}:latest"
+            CPU_TAG="${IMAGE}:cpuchain-${{ github.ref_name }},${IMAGE}:cpuchain-latest"
+            echo "TAG=$TAG" >> $GITHUB_ENV
+            echo "CPU_TAG=$CPU_TAG" >> $GITHUB_ENV
           else
-            echo "TAG=${{ github.sha }}" >> $GITHUB_ENV
+            TAG="${IMAGE}:${{ github.sha }}"
+            CPU_TAG="${IMAGE}:cpuchain-${{ github.sha }}"
+            echo "TAG=$TAG" >> $GITHUB_ENV
+            echo "CPU_TAG=$CPU_TAG" >> $GITHUB_ENV
           fi
 
       # Step 4: Build and Push Docker Image
@@ -268,7 +276,16 @@ jobs:
         with:
           context: .                     # Specify the build context (current directory with the Dockerfile)
           push: true                     # Push to container registry
-          tags: ghcr.io/${{ github.repository }}:${{ env.TAG }} # Image and tag    
+          tags: ${{ env.TAG }} # Image and tag
+
+      # Step 4: Build and Push Docker Image
+      - name: Build and Push Docker Image (CPUchain)
+        uses: docker/build-push-action@v6
+        with:
+          context: .                     # Specify the build context (current directory with the Dockerfile)
+          file: cpuchain.Dockerfile
+          push: true                     # Push to container registry
+          tags: ${{ env.CPU_TAG }} # Image and tag
 
   upload:
     needs:
