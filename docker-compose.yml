@@ -1,0 +1,71 @@
+services:
+  bitcoin_testnet4:
+    container_name: bitcoin_testnet4
+    image: ghcr.io/sethforprivacy/bitcoind:29.0
+    restart: always
+    stop_grace_period: 30m
+    networks:
+      - bitcoin_testnet4
+    volumes:
+      - ./bitcoin:/bitcoin/.bitcoin
+    ports:
+      - "127.0.0.1:18029:18029"
+    expose:
+      - 18029
+    command: |
+      -testnet4
+      -server
+      -txindex
+      -disablewallet
+      -maxmempool="5000"
+      -rpcbind="0.0.0.0"
+      -rpcallowip="0.0.0.0/0"
+      -rpcuser="rpc"
+      -rpcpassword="rpc"
+      -rpcport="18029"
+      -rpcworkqueue="1100"
+      -fallbackfee="0.00001"
+      -zmqpubhashtx="tcp://0.0.0.0:48329"
+      -zmqpubhashblock="tcp://0.0.0.0:48329"
+      -whitelist="download@0.0.0.0"
+      -maxuploadtarget="100"
+      -deprecatedrpc="warnings"
+    healthcheck:
+      test: ["CMD-SHELL", "bitcoin-cli -rpcport=\"18029\" -rpcuser=\"rpc\" -rpcpassword=\"rpc\" -getinfo"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  blockbook_testnet4:
+    container_name: blockbook_testnet4
+    image: ghcr.io/cpuchain/blockbook-docker:latest
+    restart: always
+    stop_grace_period: 30m
+    networks:
+      - bitcoin_testnet4
+    volumes:
+      - ./blockbook:/data
+      - ./blockchaincfg.json:/blockchaincfg.json:ro
+    ports:
+      - "127.0.0.1:19021:19021"
+      - "127.0.0.1:19121:19121"
+    expose:
+      - 19021
+      - 19121
+    command: |
+      -blockchaincfg=/blockchaincfg.json
+      -datadir=/data
+      -sync
+      -internal=0.0.0.0:19021
+      -public=0.0.0.0:19121
+      -explorer=
+      -log_dir=/data/logs
+      -logtostderr
+    depends_on:
+      bitcoin_testnet4:
+        condition: service_healthy
+
+networks:
+  bitcoin_testnet4:
+    name: bitcoin_testnet4
